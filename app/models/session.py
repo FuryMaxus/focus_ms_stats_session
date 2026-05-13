@@ -1,7 +1,7 @@
 from uuid import UUID, uuid4
 from datetime import datetime
 from sqlalchemy.orm import Mapped, mapped_column
-from models.base import Base
+from app.models.base import Base
 
 class FocusSession(Base):
     __tablename__ = "focus_sessions"

@@ -1,8 +1,8 @@
 import httpx
-from domain.structs import SessionStruct
+from app.domain.structs import SessionStruct
 from sqlalchemy.ext.asyncio import AsyncSession
-from models.session import FocusSession
-from .stats_logic import calculate_real_exp
+from app.models.session import FocusSession
+from app.services.stats_logic import calculate_real_exp
 
 async def process_focus_sessions(
         sessions: list[SessionStruct],

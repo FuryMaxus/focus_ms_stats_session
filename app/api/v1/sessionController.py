@@ -1,8 +1,7 @@
 from litestar import Controller, post
-from litestar.params import Dependency
 from sqlalchemy.ext.asyncio import AsyncSession
-from domain.structs import SessionStruct
-from services.session_service import process_focus_sessions
+from app.domain.structs import SessionStruct
+from app.services.session_service import process_focus_sessions
 
 class SessionController(Controller):
 
