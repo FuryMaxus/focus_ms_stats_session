@@ -16,7 +16,7 @@ def calculate_real_exp(
     ) -> int:
     duration_minutes = (end_time - start_time).total_seconds() / 60.0
 
-    activity_exp_mult = multiplier = ACTIVITY_MULTIPLIERS.get(activity_type.upper(), 1.0)
+    activity_exp_mult = ACTIVITY_MULTIPLIERS.get(activity_type.upper(), 1.0)
     
     room_mult = IN_ROOM_MULT if is_in_room else 1.0
 

@@ -56,7 +56,7 @@ def _save_sessions_to_db(
     time_trials = 0
 
     for data in sessions:
-        is_in_room = True if data.room_id else False
+        is_in_room = data.room_id is not None
         real_exp = calculate_real_exp(
             data.start_time,
             data.end_time,
