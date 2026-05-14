@@ -16,7 +16,7 @@ async def test_process_focus_sessions():
         activity_type="TIME_TRIAL",
         start_time=start,
         end_time=start + timedelta(minutes=20),
-        client_reported_xp=437,
+        client_reported_exp=437,
         room_id=uuid4() 
     )
     
@@ -28,7 +28,7 @@ async def test_process_focus_sessions():
         mock_inv.return_value = ["espada_legendaria"]
 
         result = await process_focus_sessions([session_data], mock_session_repo)        
-        assert result["total_xp"] > 0
+        assert result["total_exp"] > 0
         assert result["auth_status"]["leveled_up"] is True
         assert "espada_legendaria" in result["new_items"]
         

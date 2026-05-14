@@ -11,4 +11,4 @@ class FocusSessionModel(Base):
     activity_type: Mapped[str] = mapped_column(nullable=False)
     start_time: Mapped[datetime] = mapped_column(nullable=False)
     end_time: Mapped[datetime] = mapped_column(nullable=False)
-    xp_earned: Mapped[int] = mapped_column(default=0)
+    exp_earned: Mapped[int] = mapped_column(default=0)
