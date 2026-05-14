@@ -16,7 +16,7 @@ async def test_process_focus_sessions():
         activity_type="TIME_TRIAL",
         start_time=start,
         end_time=start + timedelta(minutes=20),
-        client_reported_xp=437,
+        client_reported_exp=437,
         room_id=uuid4() 
     )
     

@@ -8,3 +8,4 @@ asyncpg
 httpx
 python-dotenv
 alembic
+litestar[jwt]
