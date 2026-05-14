@@ -1,13 +1,17 @@
 from litestar.testing import TestClient
-from app.main import app
 from unittest.mock import patch as mock_patch, AsyncMock
 from litestar.di import Provide
+import os
+
+os.environ["DATABASE_URL"] = "postgresql+asyncpg:///:memory:"
+
+from app.main import app
 
 @mock_patch("app.api.v1.sessionController.process_focus_sessions", new_callable=AsyncMock)
 def test_sync_sessions_endpoint(mock_process)-> None:
 
-    mock_process.return_value = {"total_xp": 300, "auth_status": None, "new_items": []}
-    app.dependencies["session_repo"] = Provide(lambda: AsyncMock())
+    mock_process.return_value = {"total_exp": 300, "auth_status": None, "new_items": []}
+    app.dependencies["session_repo"] = Provide(lambda: AsyncMock(), sync_to_thread=False)
 
     with TestClient(app=app) as client:
         response = client.post(
@@ -25,4 +29,4 @@ def test_sync_sessions_endpoint(mock_process)-> None:
         assert response.status_code == 201
         data = response.json()
         assert data["status"] == "success"
-        assert data["data"]["total_xp"] == 300
+        assert data["data"]["total_exp"] == 300
