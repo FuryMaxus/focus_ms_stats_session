@@ -1,12 +1,13 @@
 import httpx
 from app.domain.structs import SessionStruct
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models.session import FocusSession
+from app.models.session import FocusSessionModel
 from app.services.stats_logic import calculate_real_exp
+from app.repositories.session_repository import SessionRepository
 
 async def process_focus_sessions(
         sessions: list[SessionStruct],
-        db_session: AsyncSession
+        session_repo: SessionRepository
     ) -> dict:
 
     if not sessions:
@@ -14,7 +15,7 @@ async def process_focus_sessions(
     
     user_id = str(sessions[0].user_id)
 
-    total_xp, time_trials_completed = _save_sessions_to_db(sessions, db_session)
+    total_xp, time_trials_completed = await _save_sessions_to_db(sessions, session_repo)
     new_level_data = None
     loot_drops = []
 
@@ -47,13 +48,14 @@ async def process_focus_sessions(
     }
 
 
-def _save_sessions_to_db(
+async def _save_sessions_to_db(
         sessions: list[SessionStruct],
-        db_session: AsyncSession
+        session_repo: SessionRepository
     ) -> tuple[int, int]:
 
     total_xp = 0
     time_trials = 0
+    models_to_insert = []
 
     for data in sessions:
         is_in_room = data.room_id is not None
@@ -66,7 +68,7 @@ def _save_sessions_to_db(
         total_xp += real_exp
         if data.activity_type == "TIME_TRIAL":
             time_trials += 1
-        new_session = FocusSession(
+        new_session = FocusSessionModel(
             user_id=data.user_id,
             room_id=data.room_id,
             activity_type=data.activity_type,
@@ -74,7 +76,10 @@ def _save_sessions_to_db(
             end_time=data.end_time,
             xp_earned=real_exp
         )
-        db_session.add(new_session)
+        models_to_insert.append(new_session)
+        
+    if models_to_insert:
+        await session_repo.add_many(models_to_insert)
 
     return total_xp, time_trials
 

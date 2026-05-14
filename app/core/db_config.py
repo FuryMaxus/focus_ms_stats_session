@@ -1,6 +1,5 @@
 import os
-from litestar.plugins.sqlalchemy import SQLAlchemyAsyncConfig
-
+from advanced_alchemy.extensions.litestar import SQLAlchemyPlugin, SQLAlchemyAsyncConfig
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL", 
@@ -9,3 +8,5 @@ DATABASE_URL = os.getenv(
 db_config = SQLAlchemyAsyncConfig(
     connection_string= DATABASE_URL
 )
+
+db_plugin = SQLAlchemyPlugin(config=db_config)

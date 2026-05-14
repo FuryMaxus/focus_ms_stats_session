@@ -1,4 +1,3 @@
-import pytest
 from datetime import datetime, timezone, timedelta
 from app.services.stats_logic import calculate_real_exp
 
