@@ -1,7 +1,14 @@
 from litestar.testing import TestClient
 from app.main import app
+from unittest.mock import patch as mock_patch, AsyncMock
+from litestar.di import Provide
 
-def test_sync_sessions_endpoint():
+@mock_patch("app.api.v1.sessionController.process_focus_sessions", new_callable=AsyncMock)
+def test_sync_sessions_endpoint(mock_process)-> None:
+
+    mock_process.return_value = {"total_xp": 300, "auth_status": None, "new_items": []}
+    app.dependencies["session_repo"] = Provide(lambda: AsyncMock())
+
     with TestClient(app=app) as client:
         response = client.post(
             "/sessions/sync",
@@ -16,4 +23,6 @@ def test_sync_sessions_endpoint():
         )
         
         assert response.status_code == 201
-        assert response.json()["status"] == "success"
+        data = response.json()
+        assert data["status"] == "success"
+        assert data["data"]["total_xp"] == 300

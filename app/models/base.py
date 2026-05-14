@@ -1,5 +1,3 @@
-from sqlalchemy.orm import DeclarativeBase
-
-class Base(DeclarativeBase):
-    pass
-
+from advanced_alchemy.base import UUIDBase
+class Base(UUIDBase):
+    __abstract__ = True

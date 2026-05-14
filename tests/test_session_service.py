@@ -8,7 +8,7 @@ from app.services.session_service import process_focus_sessions
 
 @pytest.mark.asyncio
 async def test_process_focus_sessions():
-    mock_db_session = MagicMock()
+    mock_session_repo = AsyncMock()
     
     start = datetime(2026, 5, 12, 10, 0, 0, tzinfo=timezone.utc)
     session_data = SessionStruct(
@@ -27,12 +27,11 @@ async def test_process_focus_sessions():
         
         mock_inv.return_value = ["espada_legendaria"]
 
-        result = await process_focus_sessions([session_data], mock_db_session)
-        
+        result = await process_focus_sessions([session_data], mock_session_repo)        
         assert result["total_xp"] > 0
         assert result["auth_status"]["leveled_up"] is True
         assert "espada_legendaria" in result["new_items"]
         
-        mock_db_session.add.assert_called_once()
+        mock_session_repo.add_many.assert_called_once()
         
         assert mock_inv.call_count == 2
