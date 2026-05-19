@@ -4,6 +4,7 @@ from advanced_alchemy.extensions.litestar import SQLAlchemyPlugin, SQLAlchemyAsy
 DATABASE_URL = os.getenv(
     "DATABASE_URL"
 )
+
 db_config = SQLAlchemyAsyncConfig(
     connection_string= DATABASE_URL
 )
