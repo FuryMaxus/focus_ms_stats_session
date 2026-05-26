@@ -4,11 +4,10 @@ from datetime import datetime
 from typing import Optional
 
 class SessionStruct(msgspec.Struct):
-    user_id: UUID
     activity_type: str       
     start_time: datetime
     end_time: datetime
-    client_reported_exp: int  
+    client_reported_exp: int = 0  
     room_id: Optional[UUID] = None
 
     def __post_init__(self):

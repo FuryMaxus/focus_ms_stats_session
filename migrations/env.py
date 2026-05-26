@@ -30,7 +30,7 @@ load_dotenv()
 # target_metadata = mymodel.Base.metadata
 
 from app.models.base import Base
-from app.models.session import FocusSessionModel
+from app.models.focus_session import FocusSessionModel
 
 target_metadata = Base.metadata
 

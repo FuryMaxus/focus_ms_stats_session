@@ -1,33 +1,29 @@
 from litestar import Controller, post, Request
-from litestar.exceptions import NotAuthorizedException
+import msgspec
+from litestar.exceptions import ClientException
 from app.domain.structs import SessionStruct
 from app.services.session_service import process_focus_sessions
-
-from app.repositories.session_repository import SessionRepository
+from app.repositories.session_repository import FocusSessionRepository
 
 class SessionController(Controller):
+    path = "/api/v1/sessions"
 
-    path = "/sessions"
-
-    @post("/sync")
+    @post("/batch")
     async def sync_session(
             self,
-            request: Request,   
-            data: list[SessionStruct],
-            session_repo: SessionRepository
+            request: Request,
+            data: dict,
+            session_repo: "FocusSessionRepository"
         ) -> dict:
 
-        user_id_from_token = request.user
+        seguro_user_id = request.user
+        raw_sessions = data.get("sessions", [])
+        try:
+            session_structs = [msgspec.convert(s, type=SessionStruct) for s in raw_sessions]
+        except msgspec.ValidationError as e:
+            raise ClientException(detail=f"Error de validación en fechas: {str(e)}")
         
-        for session in data:
-            if str(session.user_id) != user_id_from_token:
-                raise NotAuthorizedException(
-                    "Hacker detectado: No puedes registrar sesiones a nombre de otro usuario."
-                )
             
-        result = await process_focus_sessions(data, session_repo)
+        result = await process_focus_sessions(seguro_user_id, session_structs, session_repo)
 
-        return {
-            "status": "success",
-            "data": result
-        }
+        return result
