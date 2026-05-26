@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock
 from uuid import uuid4
 from datetime import datetime, timezone, timedelta
 
@@ -7,31 +7,50 @@ from app.domain.structs import SessionStruct
 from app.services.session_service import process_focus_sessions
 
 @pytest.mark.asyncio
-async def test_process_focus_sessions():
-    mock_session_repo = AsyncMock()
+async def test_process_focus_sessions_calculates_math_correctly():
     
-    start = datetime(2026, 5, 12, 10, 0, 0, tzinfo=timezone.utc)
-    session_data = SessionStruct(
-        user_id=uuid4(),
-        activity_type="TIME_TRIAL",
-        start_time=start,
-        end_time=start + timedelta(minutes=20),
-        client_reported_exp=437,
-        room_id=uuid4() 
-    )
+    mock_repo = AsyncMock()
+    mock_repo.add_many = AsyncMock(return_value=None)
     
-    with patch("app.services.session_service._notify_auth", new_callable=AsyncMock) as mock_auth, \
-         patch("app.services.session_service._notify_inventory", new_callable=AsyncMock) as mock_inv:
-        
-        mock_auth.return_value = {"new_xp": 1500, "leveled_up": True, "current_level": 5}
-        
-        mock_inv.return_value = ["espada_legendaria"]
+    seguro_user_id = str(uuid4())
+    ahora = datetime.now(timezone.utc)
 
-        result = await process_focus_sessions([session_data], mock_session_repo)        
-        assert result["total_exp"] > 0
-        assert result["auth_status"]["leveled_up"] is True
-        assert "espada_legendaria" in result["new_items"]
-        
-        mock_session_repo.add_many.assert_called_once()
-        
-        assert mock_inv.call_count == 2
+    sessions = [
+        SessionStruct(
+            activity_type="NORMAL",
+            start_time=ahora,
+            end_time=ahora + timedelta(minutes=30),  
+            client_reported_exp=0,
+            room_id=None
+        ),
+        SessionStruct(
+            activity_type="TIME_TRIAL",
+            start_time=ahora + timedelta(hours=1),
+            end_time=ahora + timedelta(hours=1, minutes=15), 
+            client_reported_exp=0,
+            room_id=uuid4() 
+        )
+    ]
+
+    result = await process_focus_sessions(seguro_user_id, sessions, mock_repo)
+
+
+    assert "total_exp" in result
+    assert "time_trials_completed" in result
+    assert result["time_trials_completed"] == 1
+    assert result["total_exp"] > 0 
+
+    mock_repo.add_many.assert_called_once()
+    modelos_guardados = mock_repo.add_many.call_args[0][0]
+    assert len(modelos_guardados) == 2
+    assert str(modelos_guardados[0].user_id) == seguro_user_id
+
+
+@pytest.mark.asyncio
+async def test_process_focus_sessions_empty_list():
+    mock_repo = AsyncMock()
+    result = await process_focus_sessions(str(uuid4()), [], mock_repo)
+
+    assert result["total_exp"] == 0
+    assert result["time_trials_completed"] == 0
+    mock_repo.add_many.assert_not_called()

@@ -1,47 +1,90 @@
-from litestar.testing import TestClient
-from unittest.mock import patch, AsyncMock
-from litestar.di import Provide
 import os
-from litestar.security.jwt import Token
+import pytest
+import jwt
 from datetime import datetime, timedelta, timezone
-from uuid import uuid4
+from unittest.mock import AsyncMock
 
-os.environ["DATABASE_URL"] = "postgresql+asyncpg:///:memory:"
-os.environ["SECRET_KEY"] = "clave_secreta_para_tests"
+from litestar import Litestar
+from litestar.testing import TestClient
+from litestar.di import Provide
 
-from app.main import app
-from app.core.security import SECRET_KEY
+# Importamos las piezas sueltas, NUNCA la app.main entera
+from app.api.v1.sessionController import SessionController
+from app.core.security import jwt_auth
+from app.repositories.session_repository import FocusSessionRepository
 
-def test_sync_sessions_endpoint()-> None:
+os.environ["SECRET_KEY"] = "tu_clave_super_secreta"
 
-    app.dependencies["session_repo"] = Provide(lambda: AsyncMock(), sync_to_thread=False)
+def get_test_token() -> str:
 
-    test_uuid = uuid4()
+    secret = jwt_auth.token_secret
 
-    token_obj = Token(
-        sub=str(test_uuid), 
-        exp=datetime.now(timezone.utc) + timedelta(minutes=10)
+    if not isinstance(secret, str):
+        secret = str(secret)
+
+    now = datetime.now(timezone.utc)
+    payload = {
+        "sub": "123e4567-e89b-12d3-a456-426614174000",
+        "exp": now + timedelta(minutes=10),
+        "iat": now
+    }
+    
+    return jwt.encode(payload, secret, algorithm="HS256")
+
+@pytest.fixture
+def auth_headers():
+    return {"Authorization": f"Bearer {get_test_token()}"}
+
+@pytest.fixture
+def mock_repo():
+    repo = AsyncMock(spec=FocusSessionRepository) 
+    repo.add_many = AsyncMock(return_value=None)
+    return repo
+
+@pytest.fixture
+def client(mock_repo):
+    test_app = Litestar(
+        route_handlers=[SessionController],
+        on_app_init=[jwt_auth.on_app_init],
+        dependencies={
+            "session_repo": Provide(lambda: mock_repo, sync_to_thread=False)
+        },
+        debug=True
     )
-    encoded_token = token_obj.encode(secret=SECRET_KEY, algorithm="HS256")
-    payload = [{
-        "user_id": str(test_uuid),  
-        "activity_type": "NORMAL",
-        "start_time": "2026-05-14T10:00:00Z",
-        "end_time": "2026-05-14T10:45:00Z",
-        "client_reported_exp": 150,
-        "room_id": None
-    }]
+    with TestClient(app=test_app) as client:
+        yield client
 
-    with patch("app.api.v1.sessionController.process_focus_sessions", new_callable=AsyncMock) as mock_process:        
-        mock_process.return_value = {"new_exp": 150, "leveled_up": False}
+def test_controller_batch_sync_success(client: TestClient, auth_headers: dict, mock_repo: AsyncMock):
+    payload = {
+        "sessions": [
+            {
+                "activity_type": "NORMAL",
+                "start_time": "2026-05-26T10:00:00Z",
+                "end_time": "2026-05-26T10:45:00Z",
+                "client_reported_exp": 135,
+                "room_id": None
+            }
+        ]
+    }
 
-        with TestClient(app=app) as client:
-            response = client.post(
-                "/sessions/sync", 
-                json=payload,
-                headers={"Authorization": f"Bearer {encoded_token}"}
-            )
-            
-            assert response.status_code == 201 
-            data = response.json()
-            assert "success" in data["status"]
+    response = client.post("/api/v1/sessions/batch", json=payload, headers=auth_headers)
+    
+    assert response.status_code == 201, f"Error: {response.text}"
+    data = response.json()
+    assert "total_exp" in data
+    assert "time_trials_completed" in data
+    mock_repo.add_many.assert_called_once()
+
+def test_controller_batch_sync_invalid_times(client: TestClient, auth_headers: dict):
+    payload = {
+        "sessions": [
+            {
+                "activity_type": "NORMAL",
+                "start_time": "2026-05-26T12:00:00Z",
+                "end_time": "2026-05-26T11:00:00Z",  
+                "room_id": None
+            }
+        ]
+    }
+    response = client.post("/api/v1/sessions/batch", json=payload, headers=auth_headers)
+    assert response.status_code == 400, f"Error: {response.text}"

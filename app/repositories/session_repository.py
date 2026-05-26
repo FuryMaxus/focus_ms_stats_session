@@ -1,5 +1,5 @@
 from advanced_alchemy.repository import SQLAlchemyAsyncRepository
-from app.models.session import FocusSessionModel
+from app.models.focus_session import FocusSessionModel
 
-class SessionRepository(SQLAlchemyAsyncRepository[FocusSessionModel]):
+class FocusSessionRepository(SQLAlchemyAsyncRepository[FocusSessionModel]):
     model_type = FocusSessionModel
