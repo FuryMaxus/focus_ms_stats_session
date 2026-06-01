@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 from litestar.testing import TestClient
 
 os.environ["SECRET_KEY"] = "clave_super_secreta"
+os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
 
 from app.main import app 
 from app.models.focus_session import FocusSessionModel
