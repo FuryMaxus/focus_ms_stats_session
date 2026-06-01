@@ -8,7 +8,6 @@ from litestar import Litestar
 from litestar.testing import TestClient
 from litestar.di import Provide
 
-# Importamos las piezas sueltas, NUNCA la app.main entera
 from app.api.v1.sessionController import SessionController
 from app.core.security import jwt_auth
 from app.repositories.session_repository import FocusSessionRepository
