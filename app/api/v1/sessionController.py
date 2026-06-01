@@ -1,9 +1,14 @@
-from litestar import Controller, post, Request
+from litestar import Controller, post, Request,get  
 import msgspec
+from typing import Optional
+from datetime import datetime
+from uuid import UUID
 from litestar.exceptions import ClientException
-from app.domain.structs import SessionStruct
+from app.domain.structs import SessionStruct, SessionReportResponse
 from app.services.session_service import process_focus_sessions
 from app.repositories.session_repository import FocusSessionRepository
+from app.services.session_service import fetch_session_reports
+
 
 class SessionController(Controller):
     path = "/api/v1/sessions"
@@ -27,3 +32,42 @@ class SessionController(Controller):
         result = await process_focus_sessions(seguro_user_id, session_structs, session_repo)
 
         return result
+    
+    @get("/reports")
+    async def get_reports(
+        self,
+        request: Request,
+        session_repo: "FocusSessionRepository",
+        user_id: Optional[UUID] = None,
+        room_id: Optional[UUID] = None,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+        sort_order: str = "desc",
+        limit: int = 50,
+        offset: int = 0
+    ) -> SessionReportResponse:
+        
+        logged_user_id = UUID(str(request.user))
+        user_role = "student"
+        if hasattr(request.auth, "extras"):
+            user_role = request.auth.extras.get("role", "student")
+        elif isinstance(request.auth, dict):
+            user_role = request.auth.get("role", "student")
+        
+        if user_role == "student":
+            query_user_id = logged_user_id
+            query_room_id = room_id 
+        else:
+            query_user_id = user_id if user_id is not None else logged_user_id
+            query_room_id = room_id
+
+        return await fetch_session_reports(
+            session_repo=session_repo,
+            user_id=query_user_id,
+            room_id=query_room_id,
+            start_date=start_date,
+            end_date=end_date,
+            sort_order=sort_order,
+            limit=limit,
+            offset=offset
+        )

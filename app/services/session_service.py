@@ -1,8 +1,11 @@
 from uuid import UUID
+from typing import Optional
+from datetime import datetime
 from app.domain.structs import SessionStruct
 from app.models.focus_session import FocusSessionModel
 from app.services.stats_logic import calculate_real_exp
 from app.repositories.session_repository import FocusSessionRepository
+from app.domain.structs import SessionReportResponse, SessionReportItem
 
 async def process_focus_sessions(
         user_id: str, 
@@ -55,3 +58,39 @@ async def _save_sessions_to_db(
         await session_repo.add_many(models_to_insert)
 
     return total_exp, time_trials
+
+async def fetch_session_reports(
+    session_repo: FocusSessionRepository,
+    user_id: Optional[UUID] = None,
+    room_id: Optional[UUID] = None,
+    start_date: Optional[datetime] = None,
+    end_date: Optional[datetime] = None,
+    sort_order: str = "desc",
+    limit: int = 50,
+    offset: int = 0
+) -> SessionReportResponse:
+    
+    records = await session_repo.get_reports_dynamically(
+        user_id=user_id,
+        room_id=room_id,
+        start_date=start_date,
+        end_date=end_date,
+        sort_order=sort_order,
+        limit=limit,
+        offset=offset
+    )
+
+    reports = [
+        SessionReportItem(
+            id=record.id, 
+            user_id=record.user_id,
+            activity_type=record.activity_type,
+            start_time=record.start_time,
+            end_time=record.end_time,
+            exp_earned=record.exp_earned,
+            room_id=record.room_id
+        )
+        for record in records
+    ]
+
+    return SessionReportResponse(reports=reports, total_count=len(reports))
