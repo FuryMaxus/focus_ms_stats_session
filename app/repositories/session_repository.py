@@ -2,7 +2,7 @@ from advanced_alchemy.repository import SQLAlchemyAsyncRepository
 from typing import Sequence, Optional
 from datetime import datetime
 from uuid import UUID
-from advanced_alchemy.filters import OrderBy
+from advanced_alchemy.filters import OrderBy, LimitOffset
 from app.models.focus_session import FocusSessionModel
 
 
@@ -15,7 +15,9 @@ class FocusSessionRepository(SQLAlchemyAsyncRepository[FocusSessionModel]):
         room_id: Optional[UUID] = None,
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
-        sort_order: str = "desc"
+        sort_order: str = "desc",
+        limit: int = 50,
+        offset: int = 0
     ) -> Sequence[FocusSessionModel]:
         
         query_filters = []
@@ -34,5 +36,5 @@ class FocusSessionRepository(SQLAlchemyAsyncRepository[FocusSessionModel]):
             sort_order="desc" if sort_order.lower() == "desc" else "asc"
         )
         query_filters.append(order_rule)
-        
+        query_filters.append(LimitOffset(limit=limit, offset=offset))        
         return await self.list(*query_filters)

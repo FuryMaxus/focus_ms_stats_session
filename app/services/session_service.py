@@ -65,7 +65,9 @@ async def fetch_session_reports(
     room_id: Optional[UUID] = None,
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
-    sort_order: str = "desc"
+    sort_order: str = "desc",
+    limit: int = 50,
+    offset: int = 0
 ) -> SessionReportResponse:
     
     records = await session_repo.get_reports_dynamically(
@@ -73,7 +75,9 @@ async def fetch_session_reports(
         room_id=room_id,
         start_date=start_date,
         end_date=end_date,
-        sort_order=sort_order
+        sort_order=sort_order,
+        limit=limit,
+        offset=offset
     )
 
     reports = [
