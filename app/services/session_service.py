@@ -14,10 +14,10 @@ async def process_focus_sessions(
     ) -> dict:
     
     if not sessions:
-        return {"total_exp": 0, "time_trials_completed": 0}
+        return {"total_exp_gained": 0, "time_trials_completed": 0}
 
     total_exp, time_trials_completed = await _save_sessions_to_db(user_id, sessions, session_repo)
-    return {"total_exp": total_exp, "time_trials_completed": time_trials_completed}
+    return {"total_exp_gained": total_exp, "time_trials_completed": time_trials_completed}
 
 
 async def _save_sessions_to_db(

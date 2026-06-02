@@ -21,4 +21,5 @@ app = Litestar(
         "session_repo": Provide(provide_session_repo) 
     },
     on_app_init=[jwt_auth.on_app_init],
+    debug = True
 )
