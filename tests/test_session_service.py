@@ -34,11 +34,10 @@ async def test_process_focus_sessions_calculates_math_correctly():
 
     result = await process_focus_sessions(seguro_user_id, sessions, mock_repo)
 
-
-    assert "total_exp" in result
+    assert "total_exp_gained" in result
     assert "time_trials_completed" in result
     assert result["time_trials_completed"] == 1
-    assert result["total_exp"] > 0 
+    assert result["total_exp_gained"] > 0 
 
     mock_repo.add_many.assert_called_once()
     modelos_guardados = mock_repo.add_many.call_args[0][0]
@@ -51,6 +50,6 @@ async def test_process_focus_sessions_empty_list():
     mock_repo = AsyncMock()
     result = await process_focus_sessions(str(uuid4()), [], mock_repo)
 
-    assert result["total_exp"] == 0
+    assert result["total_exp_gained"] == 0
     assert result["time_trials_completed"] == 0
     mock_repo.add_many.assert_not_called()

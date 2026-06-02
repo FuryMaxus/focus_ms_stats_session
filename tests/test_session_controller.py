@@ -22,10 +22,12 @@ def get_test_token() -> str:
         secret = str(secret)
 
     now = datetime.now(timezone.utc)
+    exp = now + timedelta(minutes=10)
+    
     payload = {
         "sub": "123e4567-e89b-12d3-a456-426614174000",
-        "exp": now + timedelta(minutes=10),
-        "iat": now
+        "exp": int(exp.timestamp()), # Convertido a entero
+        "iat": int(now.timestamp())  # Convertido a entero
     }
     
     return jwt.encode(payload, secret, algorithm="HS256")
@@ -70,7 +72,8 @@ def test_controller_batch_sync_success(client: TestClient, auth_headers: dict, m
     
     assert response.status_code == 201, f"Error: {response.text}"
     data = response.json()
-    assert "total_exp" in data
+    
+    assert "total_exp_gained" in data
     assert "time_trials_completed" in data
     mock_repo.add_many.assert_called_once()
 
