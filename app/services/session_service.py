@@ -1,24 +1,26 @@
 from uuid import UUID
 from typing import Optional
 from datetime import datetime
-from app.domain.structs import SessionStruct
+from app.domain.structs import SessionStruct, SyncSessionResponse, SessionReportResponse, SessionReportItem
 from app.models.focus_session import FocusSessionModel
 from app.services.stats_logic import calculate_real_exp
 from app.repositories.session_repository import FocusSessionRepository
-from app.domain.structs import SessionReportResponse, SessionReportItem
 
 async def process_focus_sessions(
         user_id: str, 
         sessions: list[SessionStruct],
         session_repo: FocusSessionRepository
-    ) -> dict:
+    ) -> SyncSessionResponse:
     
     if not sessions:
-        return {"total_exp_gained": 0, "time_trials_completed": 0}
+        return SyncSessionResponse(total_exp_gained=0, time_trials_completed=0)
 
     total_exp, time_trials_completed = await _save_sessions_to_db(user_id, sessions, session_repo)
-    return {"total_exp_gained": total_exp, "time_trials_completed": time_trials_completed}
-
+    
+    return SyncSessionResponse(
+        total_exp_gained=total_exp, 
+        time_trials_completed=time_trials_completed
+    )
 
 async def _save_sessions_to_db(
         user_id: str,
