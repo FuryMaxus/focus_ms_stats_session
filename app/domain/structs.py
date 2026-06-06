@@ -13,7 +13,14 @@ class SessionStruct(msgspec.Struct):
     def __post_init__(self):
         if self.end_time <= self.start_time:
             raise ValueError("end_time must be after start_time")
-        
+
+class SyncSessionPayload(msgspec.Struct):
+    sessions: List[SessionStruct]
+
+class SyncSessionResponse(msgspec.Struct):
+    total_exp_gained: int
+    time_trials_completed: int
+
 class SessionReportItem(msgspec.Struct):
     id: UUID 
     user_id: UUID
