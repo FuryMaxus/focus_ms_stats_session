@@ -1,10 +1,8 @@
 from litestar import Controller, post, Request,get  
-import msgspec
 from typing import Optional
 from datetime import datetime
 from uuid import UUID
-from litestar.exceptions import ClientException
-from app.domain.structs import SessionStruct, SessionReportResponse
+from app.domain.structs import SyncSessionPayload, SyncSessionResponse, SessionReportResponse
 from app.services.session_service import process_focus_sessions
 from app.repositories.session_repository import FocusSessionRepository
 from app.services.session_service import fetch_session_reports
@@ -17,22 +15,15 @@ class SessionController(Controller):
     async def sync_session(
             self,
             request: Request,
-            data: dict,
+            data: SyncSessionPayload,
             session_repo: "FocusSessionRepository"
-        ) -> dict:
+        ) -> SyncSessionResponse:
 
-        seguro_user_id = request.user
-        raw_sessions = data.get("sessions", [])
-        try:
-            session_structs = [msgspec.convert(s, type=SessionStruct) for s in raw_sessions]
-        except msgspec.ValidationError as e:
-            raise ClientException(detail=f"Error de validación en fechas: {str(e)}")
+        user_data = request.user
+        seguro_user_id = str(user_data.get("sub")) if isinstance(user_data, dict) else str(user_data)
         
-            
-        result = await process_focus_sessions(seguro_user_id, session_structs, session_repo)
-
-        return result
-    
+        return await process_focus_sessions(seguro_user_id, data.sessions, session_repo)
+        
     @get("/reports")
     async def get_reports(
         self,
