@@ -1,0 +1,32 @@
+services:
+  stats_db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: stats_password
+      POSTGRES_DB: focus_stats_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - stats_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d focus_stats_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  stats_ms:
+    build:
+      context: .
+    ports:
+      - "8002:8002"
+    environment:
+      - PORT=8002
+      - DATABASE_URL=postgresql+asyncpg://user:stats_password@stats_db:5432/focus_stats_db
+      - SECRET_KEY=clave_super_secreta
+    depends_on:
+      stats_db:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+volumes:
+  stats_data:
