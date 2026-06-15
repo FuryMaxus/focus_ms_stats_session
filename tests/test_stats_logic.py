@@ -27,7 +27,6 @@ def test_calculate_real_exp_time_trial_in_room():
     start = datetime(2026, 5, 12, 10, 0, 0, tzinfo=timezone.utc)
     end = start + timedelta(minutes=20)
     
-    # El multiplicador x1.25 de sala ahora viene inyectado
     session = SessionStruct(
         activity_type="TIME_TRIAL",
         start_time=start,
