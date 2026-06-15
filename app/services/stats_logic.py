@@ -1,4 +1,5 @@
 from datetime import datetime
+from app.domain.structs import SessionStruct
 
 ACTIVITY_MULTIPLIERS = {
     "NORMAL" : 1.0,
@@ -6,21 +7,17 @@ ACTIVITY_MULTIPLIERS = {
 }
 
 BASE_EXP_PER_MIN = 10
-IN_ROOM_MULT = 1.25
+
 
 def calculate_real_exp(
-        start_time: datetime,
-        end_time: datetime, 
-        activity_type: str,
-        is_in_room: bool
+        session: SessionStruct
     ) -> int:
-    duration_minutes = (end_time - start_time).total_seconds() / 60.0
+    duration_minutes = (session.end_time - session.start_time).total_seconds() / 60.0
 
-    activity_exp_mult = ACTIVITY_MULTIPLIERS.get(activity_type.upper(), 1.0)
+    activity_exp_mult = ACTIVITY_MULTIPLIERS.get(session.activity_type.upper(), 1.0)
     
-    room_mult = IN_ROOM_MULT if is_in_room else 1.0
 
-    multiplier = room_mult * activity_exp_mult
+    multiplier = session.xp_multiplier  * activity_exp_mult
 
     total_exp = int(duration_minutes * BASE_EXP_PER_MIN * multiplier)
 

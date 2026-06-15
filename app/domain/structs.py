@@ -9,6 +9,7 @@ class SessionStruct(msgspec.Struct):
     end_time: datetime
     client_reported_exp: int = 0  
     room_id: Optional[UUID] = None
+    xp_multiplier: float = 1.0
 
     def __post_init__(self):
         if self.end_time <= self.start_time:

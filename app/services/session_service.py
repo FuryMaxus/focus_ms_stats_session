@@ -31,23 +31,19 @@ async def _save_sessions_to_db(
     total_exp = 0
     time_trials = 0
     models_to_insert = []
+    parsed_user_id = UUID(user_id)
 
-    for data in sessions:
-        is_in_room = data.room_id is not None
-        
+    for data in sessions:        
         real_exp = calculate_real_exp(
-            data.start_time,
-            data.end_time,
-            data.activity_type,
-            is_in_room
+            data
         )
         total_exp += real_exp
         
-        if data.activity_type == "TIME_TRIAL":
+        if data.activity_type.upper() == "TIME_TRIAL":
             time_trials += 1
             
         new_session = FocusSessionModel(
-            user_id=UUID(user_id),
+            user_id=parsed_user_id,
             room_id=data.room_id,
             activity_type=data.activity_type,
             start_time=data.start_time,
