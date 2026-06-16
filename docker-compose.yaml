@@ -6,7 +6,7 @@ services:
       POSTGRES_PASSWORD: stats_password
       POSTGRES_DB: focus_stats_db
     ports:
-      - "5434:5432"
+      - "5438:5432"
     volumes:
       - stats_data:/var/lib/postgresql/data
     healthcheck:
@@ -18,9 +18,9 @@ services:
     build:
       context: .
     ports:
-      - "8002:8002"
+      - "8002:8080"
     environment:
-      - PORT=8002
+      - PORT=8080
       - DATABASE_URL=postgresql+asyncpg://user:stats_password@stats_db:5432/focus_stats_db
       - SECRET_KEY=clave_super_secreta
     depends_on:
