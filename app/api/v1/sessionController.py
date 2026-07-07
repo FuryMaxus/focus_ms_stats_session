@@ -49,7 +49,10 @@ class SessionController(Controller):
             query_user_id = logged_user_id
             query_room_id = room_id 
         else:
-            query_user_id = user_id if user_id is not None else logged_user_id
+            if room_id is not None and user_id is None:
+                query_user_id = None
+            else:
+                query_user_id = user_id if user_id is not None else logged_user_id
             query_room_id = room_id
 
         return await fetch_session_reports(
