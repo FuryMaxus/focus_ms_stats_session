@@ -37,19 +37,23 @@ class SessionController(Controller):
         limit: int = 50,
         offset: int = 0
     ) -> SessionReportResponse:
-        
-        logged_user_id = UUID(str(request.user))
-        user_role = "student"
-        if hasattr(request.auth, "extras"):
-            user_role = request.auth.extras.get("role", "student")
-        elif isinstance(request.auth, dict):
-            user_role = request.auth.get("role", "student")
-        
+
+        if isinstance(request.user, dict):
+            logged_user_id = UUID(str(request.user.get("sub", request.user.get("id"))))
+            user_role = str(request.user.get("role", "student")).lower()
+        else:
+            logged_user_id = UUID(str(request.user))
+            user_role = "student"
+            if isinstance(request.auth, dict):
+                user_role = str(request.auth.get("role", "student")).lower()
+            elif hasattr(request.auth, "extras"):
+                user_role = str(request.auth.extras.get("role", "student")).lower()
+
         if user_role == "student":
             query_user_id = logged_user_id
-            query_room_id = room_id 
+            query_room_id = room_id
         else:
-            query_user_id = user_id if user_id is not None else logged_user_id
+            query_user_id = user_id
             query_room_id = room_id
 
         return await fetch_session_reports(
