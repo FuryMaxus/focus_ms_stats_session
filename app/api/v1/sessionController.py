@@ -21,7 +21,9 @@ class SessionController(Controller):
 
         user_data = request.user
         seguro_user_id = str(user_data.get("sub")) if isinstance(user_data, dict) else str(user_data)
-        
+        print("DEBUG BACKEND: Petición recibida desde Android:")
+        for session in data.sessions:
+            print(f" -> Actividad: {session.activity_type}, RoomID: {session.room_id}")
         return await process_focus_sessions(seguro_user_id, data.sessions, session_repo)
         
     @get("/reports")
