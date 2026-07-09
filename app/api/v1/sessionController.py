@@ -2,8 +2,13 @@ from litestar import Controller, post, Request,get
 from typing import Optional
 from datetime import datetime
 from uuid import UUID
-from app.domain.structs import SyncSessionPayload, SyncSessionResponse, SessionReportResponse
-from app.services.session_service import process_focus_sessions
+
+from litestar.params import QueryParameter
+from sqlalchemy.sql.annotation import Annotated
+
+from app.domain.structs import SyncSessionPayload, SyncSessionResponse, SessionReportResponse, LeaderboardItem, \
+    GraphItem
+from app.services.session_service import process_focus_sessions, fetch_room_leaderboard, fetch_room_graph
 from app.repositories.session_repository import FocusSessionRepository
 from app.services.session_service import fetch_session_reports
 
@@ -71,3 +76,22 @@ class SessionController(Controller):
             limit=limit,
             offset=offset
         )
+
+    @get("/leaderboard")
+    async def get_leaderboard(
+        self,
+        room_id: Annotated[UUID, QueryParameter()],
+        session_repo: "FocusSessionRepository",
+        limit: Annotated[int, QueryParameter()] = 10
+    ) -> list[LeaderboardItem]:
+        return await fetch_room_leaderboard(room_id=room_id, limit=limit, session_repo=session_repo)
+
+    @get("/graph")
+    async def get_graph(
+        self,
+        room_id: Annotated[UUID, QueryParameter()],
+        start_date: Annotated[datetime, QueryParameter()],
+        end_date: Annotated[datetime, QueryParameter()],
+        session_repo: "FocusSessionRepository"
+    ) -> list[GraphItem]:
+        return await fetch_room_graph(room_id=room_id, start_date=start_date, end_date=end_date, session_repo=session_repo)
