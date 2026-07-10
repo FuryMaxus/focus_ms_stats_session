@@ -34,3 +34,11 @@ class SessionReportItem(msgspec.Struct):
 class SessionReportResponse(msgspec.Struct):
     reports: List[SessionReportItem]
     total_count: int
+
+class LeaderboardItem(msgspec.Struct):
+    user_id: UUID
+    total_xp: int
+
+class GraphItem(msgspec.Struct):
+    date: str
+    xp: int

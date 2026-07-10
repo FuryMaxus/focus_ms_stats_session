@@ -1,7 +1,11 @@
 from uuid import UUID
 from typing import Optional
 from datetime import datetime
-from app.domain.structs import SessionStruct, SyncSessionResponse, SessionReportResponse, SessionReportItem
+
+from litestar.exceptions import ClientException
+
+from app.domain.structs import SessionStruct, SyncSessionResponse, SessionReportResponse, SessionReportItem, \
+    LeaderboardItem, GraphItem
 from app.models.focus_session import FocusSessionModel
 from app.services.stats_logic import calculate_real_exp
 from app.repositories.session_repository import FocusSessionRepository
@@ -92,3 +96,23 @@ async def fetch_session_reports(
     ]
 
     return SessionReportResponse(reports=reports, total_count=len(reports))
+
+
+async def fetch_room_leaderboard(
+        room_id: UUID,
+        limit: int,
+        session_repo: FocusSessionRepository
+) -> list[LeaderboardItem]:
+    return await session_repo.get_room_leaderboard(room_id, limit)
+
+
+async def fetch_room_graph(
+        room_id: UUID,
+        start_date: datetime,
+        end_date: datetime,
+        session_repo: FocusSessionRepository
+) -> list[GraphItem]:
+    if start_date > end_date:
+        raise ClientException("La fecha de inicio no puede ser posterior a la fecha de fin.")
+
+    return await session_repo.get_xp_by_date(room_id, start_date, end_date)
