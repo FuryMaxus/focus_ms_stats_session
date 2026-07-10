@@ -57,7 +57,7 @@ async def _save_sessions_to_db(
         models_to_insert.append(new_session)
         
     if models_to_insert:
-        await session_repo.add_many(models_to_insert)
+        await session_repo.add_many(models_to_insert, auto_commit=True)
 
     return total_exp, time_trials
 
