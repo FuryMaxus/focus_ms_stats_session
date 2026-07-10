@@ -80,18 +80,18 @@ class SessionController(Controller):
     @get("/leaderboard")
     async def get_leaderboard(
         self,
-        room_id: Annotated[UUID, QueryParameter()],
+        room_id: UUID,
         session_repo: "FocusSessionRepository",
-        limit: Annotated[int, QueryParameter()] = 10
+        limit: int = 10
     ) -> list[LeaderboardItem]:
         return await fetch_room_leaderboard(room_id=room_id, limit=limit, session_repo=session_repo)
 
     @get("/graph")
     async def get_graph(
         self,
-        room_id: Annotated[UUID, QueryParameter()],
-        start_date: Annotated[datetime, QueryParameter()],
-        end_date: Annotated[datetime, QueryParameter()],
+        room_id: UUID,
+        start_date: datetime,
+        end_date: datetime,
         session_repo: "FocusSessionRepository"
     ) -> list[GraphItem]:
         return await fetch_room_graph(room_id=room_id, start_date=start_date, end_date=end_date, session_repo=session_repo)
